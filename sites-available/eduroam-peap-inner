@@ -1,0 +1,68 @@
+##
+## PEAP processing for eduroam
+##
+
+server eduroam-peap-inner {
+
+    authorize {
+	    split_username_nai
+
+	    ## check inner realm matches outer realm, eduroam req...
+	    if (noop || (&Stripped-User-Domain && \
+			(&outer.Stripped-User-Domain != &Stripped-User-Domain))) {
+		reject
+	    }
+
+	    ## push inner username to outer - isn't this done in EAP anyway (for accounting)?
+	    update {
+		&outer.session-state:Stripped-User-Name := &Stripped-User-Name
+	    }
+
+	    ## check the cache, see if an entry exists...
+	    update control {
+	        Cache-Status-Only = 'yes'
+	    }
+	    cache
+
+	    if (notfound) {
+		update control {
+		    Cache-Status-Only = 'no'
+	        }
+		ldap
+	    }
+	    cache
+
+	    ## reject if member of no access:
+	    if (&control:LDAP-Cached-Membership && &control:LDAP-Cached-Membership == "DL-Eduroam-No Access") {
+		reject
+	    }
+
+	    ## set which groups re required for login, dependent on ?client
+	    if ("%{client:shortname}" =~ /^roaming/ ) {
+		update request {
+		    ## DL-Eduroam-Roaming Access:
+		    eduroam-required-groups := "S-1-5-21-340056767-2434637155-1542768837-256970"
+		}
+	    }
+	    else {
+		update request {
+		    ## anyone, so ?domain users?
+		    eduroam-required-groups := "S-1-5-21-340056767-2434637155-1542768837-513"
+		}
+	    }
+
+
+
+	    eap-peap {
+		ok = return
+	    }
+
+	    mschap
+	    return
+    }
+
+    authenticate {
+		eap-peap
+		mschap
+    }
+}

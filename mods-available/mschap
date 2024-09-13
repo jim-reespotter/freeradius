@@ -1,0 +1,33 @@
+##
+## NTLM authentication
+##
+
+mschap {
+
+	use_mppe = yes
+	require_encryption = yes
+#	require_strong = yes
+
+
+	ntlm_auth = "/usr/bin/ntlm_auth --request-nt-key --allow-mschapv2 \
+			--username=%{%{Stripped-User-Name}:-%{%{User-Name}:-None}} \
+			--require-membership-of=%{eduroam-required-groups} \
+			--challenge=%{%{mschap:Challenge}:-00} \
+			--nt-response=%{%{mschap:NT-Response}:-00}"
+
+	pool {
+
+		start = ${thread[pool].start_servers}
+		min = ${thread[pool].min_spare_servers}
+		max = ${thread[pool].max_servers}
+		spare = ${thread[pool].max_spare_servers}
+		uses = 0
+		retry_delay = 30
+		lifetime = 86400
+		cleanup_interval = 300
+		idle_timeout = 600
+	}
+
+	passchange {
+	}
+}

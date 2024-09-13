@@ -1,0 +1,55 @@
+##
+## Default processing. We're not using this is if you hit this, reject.
+## Required for listen section.
+##
+
+server default {
+
+    listen {
+		type = auth
+		ipaddr = *
+		port = 0
+
+		limit {
+			max_connections = 16
+			lifetime = 0
+			idle_timeout = 30
+		}
+    }
+
+    listen {
+		ipaddr = *
+		port = 0
+		type = acct
+
+		limit {
+		}
+    }
+
+    listen {
+		type = auth
+		ipv6addr = ::	# any.  ::1 == localhost
+		port = 0
+		limit {
+	      max_connections = 16
+	      lifetime = 0
+	      idle_timeout = 30
+		}
+    }
+
+    listen {
+		ipv6addr = ::
+		port = 0
+		type = acct
+
+		limit {
+		}
+    }
+
+    authorize {
+		reject
+    }
+
+    authenticate {
+    }
+}

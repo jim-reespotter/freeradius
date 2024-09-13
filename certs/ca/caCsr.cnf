@@ -1,0 +1,26 @@
+FQDN = ca.8021x.exampleshire.ac.uk 
+ORGNAME = University of Exampleshire
+ALTNAMES = DNS:$FQDN
+
+[ req ]
+ default_bits = 4096
+ default_md = sha256
+ prompt = no 
+ encrypt_key = yes
+ distinguished_name = dn
+ req_extensions = ca_cert
+
+[ dn ]
+ C = GB
+ O = $ORGNAME
+ CN = $FQDN
+# emailAddress = itservices@exampleshire.ac.uk 
+
+
+[ ca_cert ]
+ subjectKeyIdentifier=hash 
+ authorityKeyIdentifier=keyid:always 
+ basicConstraints=critical,CA:TRUE,pathlen:0
+ keyUsage = critical,cRLSign,digitalSignature,keyCertSign
+
+## openssl req -new -x509 -out ca.pem -keyout ca.key -days 18262 -config ./caCsr.cnf -extensions ca_cert -set_serial 01

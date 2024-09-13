@@ -1,0 +1,23 @@
+# OpenSSL configuration file for creating a CSR for a server certificate
+#  Adapt at least the FQDN and ORGNAME lines, and then run
+
+FQDN = radius.exampleshire.ac.uk
+ORGNAME = University of Exampleshire
+ALTNAMES = DNS:$FQDN 
+
+[ req ]
+ default_bits = 4096
+ default_md = sha256
+ prompt = no 
+ encrypt_key = yes
+ distinguished_name = dn 
+ req_extensions = req_ext
+
+[ dn ]
+ C = GB
+ O = $ORGNAME
+ CN = $FQDN
+
+[ req_ext ]
+subjectAltName = $ALTNAMES
+

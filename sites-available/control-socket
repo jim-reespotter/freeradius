@@ -1,0 +1,14 @@
+##
+## Control socket interface
+##
+## To use, run: 
+## (see https://www.freeradius.org/radiusd/man/raddebug.html)
+##
+
+listen {
+
+	type = control
+	socket = ${run_dir}/${name}.sock
+
+	mode = rw
+}

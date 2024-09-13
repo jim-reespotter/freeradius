@@ -1,0 +1,31 @@
+##
+##  LDAP config (group lookups) - specifically for eduroam no access group:
+##
+ldap {
+
+	server = ${ldap.server}
+	base_dn = ${ldap.baseDN}
+
+	tls {
+		start_tls = yes
+		ca_file	= ${certdir}/ldaps.pem
+	}
+
+        identity = ${ldap.username}
+	password = ${ldap.passwd}
+
+	user { 
+		base_dn = "${..base_dn}" 
+		scope = sub 
+		filter = "(&(objectclass=user)(sAMAccountName=%{Stripped-User-Name}))"
+        }
+
+        group { 
+		base_dn = "${..base_dn}" 
+		filter = "(&(objectclass=group)(sAMAccountName=DL-Eduroam-No Access))" 
+		membership_filter = "(member:1.2.840.113556.1.4.1941:=%{control:Ldap-UserDn})" 
+		cacheable_name ='yes' 
+		cacheable_dn = 'no' 
+		cache_attribute = 'LDAP-Cached-Membership'
+        }
+}

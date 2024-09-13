@@ -1,0 +1,156 @@
+##
+## processor to handle onsite eduroam auth requests
+## 
+
+server eduLocal {
+
+  authorize {
+
+	filter_username
+	preprocess
+
+	debug_all
+
+	if (&User-Name) {
+	    # standard eduroam user auth: Username contains a @
+	    if (&User-Name =~ /@/) {  
+		operator-name
+		suffix	
+		split_username_nai
+
+		## Its a local user:
+#		if (&Stripped-User-Domain =~ /${my_realms_regex}/) {
+		if ( "%{config:realms.%{Stripped-User-Domain}}" ) {
+		    eap-eduroam {
+			ok = return
+			updated = return
+		    }
+		}
+		## Its a visitor
+		else {
+		    update {
+			control:Load-Balance-Key := &Calling-Station-ID
+			control:Proxy-To-Realm := 'eduroam_nrps'
+			request:Operator-Name := "1${eduroam_config.operator_name}"
+		    }
+		    return
+		}
+	    }
+
+	    ## This is local machine auth:
+#	    elsif (&User-Name =~ /^host\/.*bedcoll.local/) {
+	    elsif (&User-Name =~ /^host\/.*/) {
+		eap-corp {
+		    ok = return
+		    updated = return
+		}
+	    }
+	}
+  }
+
+  authenticate {
+
+	eap-eduroam
+	eap-corp
+  }
+
+  preacct {
+
+	preprocess
+	suffix
+  }
+
+  accounting {
+
+#	detail
+	attr_filter.accounting_response
+  }
+
+  session {
+  }
+
+  post-auth {
+
+	if (session-state:User-Name && reply:User-Name && request:User-Name && (reply:User-Name == request:User-Name)) {
+		update reply {
+			&User-Name !* ANY
+		}
+	}
+	update {
+		&reply: += &session-state:
+	}
+
+	remove_reply_message_if_eap
+
+	Post-Auth-Type REJECT {
+		attr_filter.access_reject
+		eap-eduroam
+		remove_reply_message_if_eap
+	}
+
+	Post-Auth-Type Challenge {
+	}
+
+	Post-Auth-Type Client-Lost {
+	}
+
+	if (EAP-Key-Name && &reply:EAP-Session-Id) {
+		update reply {
+			&EAP-Key-Name := &reply:EAP-Session-Id
+		}
+	}
+
+	## VLAN stuff: set standard replies here:
+	update reply {
+	    Framed-Protocol := PPP
+	    Service-Type := Framed
+	    Tunnel-Type := GRE
+	    Tunnel-Medium-Type := IP
+	}
+
+	debug_all
+
+	## VLAN stuff: set specific VLAN ID:
+	## We only have a &Stripped-User-Domain if its username@relam.ac.uk format, so user auth:
+	if (&Stripped-User-Domain) {
+	    if (&Stripped-User-Domain =~ /${my_realms_regex}/) {
+		## auth via client certificate (machine or user)
+		## as the only way to do cert auth is on a corporate device at the moment, pop them in corp vlan
+		if (&request:EAP-Type == "TLS") {
+		    update reply {
+			Tunnel-Private-Group-ID := "%{config:vlans.default.corp}"
+		    }
+		}
+		## PEAP/password auth (user), BYOD
+		else {
+		    ## differentatie staff vs students?
+		    update reply {
+		    	Tunnel-Private-Group-ID := "%{config:vlans.default.staff}"
+		    }
+	        }
+	    }
+	    else {
+		## visitor
+		update reply {
+		    Tunnel-Private-Group-ID := "%{config:vlans.default.visitor}"
+		}
+	    }
+	}
+	## one of our computers...
+	elsif (&User-Name =~ /^host\/.*/) {
+	    update reply {
+	        Tunnel-Private-Group-ID := "%{config:vlans.default.corp}"
+	    }
+    }
+
+  debug_all
+  }
+
+  pre-proxy {
+  }
+
+  post-proxy {
+
+	eap-eduroam
+  }
+}

@@ -1,0 +1,39 @@
+##
+## Processor for corporate device auth cert checks
+###
+
+server check-eap-tls-eduroam {
+
+    debug_all 
+
+    authorize {
+
+	if ( "%{TLS-Client-Cert-Subject-Alt-Name-Upn}" == "%{User-Name}" ) { 
+	## not sure we need above check?
+	## but we should check:
+        ## - disabled/expired account?
+	## - group membership?
+	    update config {
+		&Auth-Type := Accept
+	    }
+	}
+	else {
+	    update config {
+		&Auth-Type := Reject
+	    }
+	}
+#	if ("%{TLS-Client-Cert-Common-Name}" == 'client.example.com') {
+#		update config {
+#			&Auth-Type := Accept
+#		}
+#	}
+#	else {
+#		update config {
+#			&Auth-Type := Reject
+#		}
+#		update reply {
+#			&Reply-Message := "Your certificate is not valid."
+#		}
+#	}
+    }
+}

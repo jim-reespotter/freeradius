@@ -1,0 +1,16 @@
+##
+## Caching for LDAP lookups
+##
+
+cache {
+	driver = "rlm_cache_rbtree"
+	key = "%{Stripped-User-Name}"
+
+	## how long to keep cache (seconds)
+	ttl = 86400
+	add_stats = no
+
+	update {
+	    &control:LDAP-Cached-Membership += &control:LDAP-Cached-Membership[*]
+	}
+}

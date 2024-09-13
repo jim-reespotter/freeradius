@@ -1,0 +1,68 @@
+#
+# OpenSSL CA configuration file (tweaked for FreeRad)
+#
+# Purposes: - generate a sutiable (server) cert signed by the CA from a previously created signing request
+#
+
+openssl_conf = default_conf 
+
+[ ca ]
+ default_ca = CA_default # The default ca section 
+
+[ CA_default ]
+ dir = .			# Where everything is kept
+ certs = $dir/certs		# Where the issued certs are kept
+ crl_dir = $dir/crl		# Where the issued crl are kept 
+ database = $dir/index.txt	# database index file. 
+ new_certs_dir = $dir/newcerts	# default place for new certs. 
+ certificate = $dir/ca.pem	# The CA certificate 
+ serial = $dir/serial		# The current serial number
+ crlnumber = $dir/crlnumber	# the current crl number 
+ crl = $dir/crl.pem		# The current CRL
+ private_key = $dir/ca.key	# The private key 
+
+ x509_extensions = SET_ON_CMD_LINE # The extensions to add to the cert 
+ name_opt = ca_default		# Subject Name options
+ cert_opt = ca_default		# Certificate field options
+ copy_extensions = copy 
+
+ default_days = 730		# how long to certify for
+ default_crl_days= 30		# how long before next CRL
+ default_md = default		# use public key default MD
+ preserve = no			# keep passed DN ordering
+ policy = policy_match 
+
+[ policy_match ]
+ countryName = match
+ stateOrProvinceName = optional
+ organizationName = match
+ organizationalUnitName = optional 
+ commonName = supplied
+ emailAddress = optional 
+
+[ server_cert ]
+ basicConstraints=CA:FALSE	# Add SKI/AKI
+ subjectKeyIdentifier=hash
+ authorityKeyIdentifier=keyid,issuer 
+ extendedKeyUsage=serverAuth 
+ crlDistributionPoints=URI:http://eduroam.exampleshire.ac.uk/cdp/cdp.crl
+
+[ client_cert ]
+ basicConstraints=CA:FALSE
+ subjectKeyIdentifier=hash
+ authorityKeyIdentifier=keyid,issuer
+ extendedKeyUsage=clientAuth
+
+[ crl_ext ]
+ authorityKeyIdentifier=keyid:always 
+
+[default_conf]
+ ssl_conf = ssl_sect 
+
+[ssl_sect]
+ system_default = system_default_sect 
+
+[system_default_sect]
+ MinProtocol = TLSv1.2
+ CipherString = 
+ DEFAULT@SECLEVEL=2
