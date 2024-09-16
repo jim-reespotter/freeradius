@@ -1,13 +1,18 @@
 ##
 ## Processor for corporate device auth cert checks
-###
+## - might need a bit of work (and a name change)
+##
 
 server check-eap-tls-corp {
 
     authorize {
-	update config {
-		&Auth-Type := Accept
-	}
+	
+		## san dns -> User-Name....
+		## group checks?
+	
+		update config {
+			&Auth-Type := Accept
+		}
 #	if ("%{TLS-Client-Cert-Common-Name}" == 'client.example.com') {
 #		update config {
 #			&Auth-Type := Accept

@@ -7,17 +7,13 @@ server eduroam-peap-inner {
     authorize {
 	    split_username_nai
 
-	    ## check inner realm matches outer realm, eduroam req...
-	    if (noop || (&Stripped-User-Domain && \
-			(&outer.Stripped-User-Domain != &Stripped-User-Domain))) {
-		reject
-	    }
-
-	    ## push inner username to outer - isn't this done in EAP anyway (for accounting)?
+	    ## push inner username to outer for accounting
 	    update {
-		&outer.session-state:Stripped-User-Name := &Stripped-User-Name
+			## possibly user-name and user-domain too? and groups?
+			&outer.session-state:Stripped-User-Name := &Stripped-User-Name
 	    }
 
+		## Looking up LDAP groups + caching:
 	    ## check the cache, see if an entry exists...
 	    update control {
 	        Cache-Status-Only = 'yes'
@@ -31,13 +27,19 @@ server eduroam-peap-inner {
 		ldap
 	    }
 	    cache
+		## end of LDAP group lookup (put this in a seprate chunk of code?)
+
+		## Group based filtering:
+		## - eduroam - no access - reject
+		## - domain users - allowed eduroam onsite
+		## - eduroam - roamer - allow offsite
 
 	    ## reject if member of no access:
 	    if (&control:LDAP-Cached-Membership && &control:LDAP-Cached-Membership == "DL-Eduroam-No Access") {
-		reject
+			reject
 	    }
 
-	    ## set which groups re required for login, dependent on ?client
+	    ## set which groups re required for login, dependent on request source:
 	    if ("%{client:shortname}" =~ /^roaming/ ) {
 		update request {
 		    ## DL-Eduroam-Roaming Access:
@@ -45,16 +47,14 @@ server eduroam-peap-inner {
 		}
 	    }
 	    else {
-		update request {
+		  update request {
 		    ## anyone, so ?domain users?
 		    eduroam-required-groups := "S-1-5-21-340056767-2434637155-1542768837-513"
-		}
+		  }
 	    }
 
-
-
 	    eap-peap {
-		ok = return
+		  ok = return
 	    }
 
 	    mschap

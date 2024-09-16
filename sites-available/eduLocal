@@ -1,5 +1,6 @@
 ##
 ## processor to handle onsite eduroam auth requests
+## (this is the complicated one)
 ## 
 
 server eduLocal {
@@ -14,36 +15,40 @@ server eduLocal {
 	if (&User-Name) {
 	    # standard eduroam user auth: Username contains a @
 	    if (&User-Name =~ /@/) {  
-		operator-name
-		suffix	
-		split_username_nai
+			operator-name
+			suffix	
+			split_username_nai
 
-		## Its a local user:
-#		if (&Stripped-User-Domain =~ /${my_realms_regex}/) {
-		if ( "%{config:realms.%{Stripped-User-Domain}}" ) {
-		    eap-eduroam {
-			ok = return
-			updated = return
-		    }
-		}
-		## Its a visitor
-		else {
-		    update {
-			control:Load-Balance-Key := &Calling-Station-ID
-			control:Proxy-To-Realm := 'eduroam_nrps'
-			request:Operator-Name := "1${eduroam_config.operator_name}"
-		    }
-		    return
-		}
+			## Its a local user:
+			if ( "%{config:realms.%{Stripped-User-Domain}}" ) {
+		
+				## uncomment if you want group assignment:  
+				## &ms-ad-domain := %{config:realms.%{Stripped-User-Domain}}
+
+				eap-eduroam {
+					ok = return
+					updated = return
+				}
+			}
+			## eduroam computer auth here.... (pinch from corp)
+			## Its a visitor
+			else {
+				update {
+					control:Load-Balance-Key := &Calling-Station-ID
+					control:Proxy-To-Realm := 'eduroam_nrps'
+					request:Operator-Name := "1${eduroam_config.operator_name}"
+				}
+				return
+			}
 	    }
 
 	    ## This is local machine auth:
-#	    elsif (&User-Name =~ /^host\/.*bedcoll.local/) {
+#	    possibly add domain into pattern here?
 	    elsif (&User-Name =~ /^host\/.*/) {
-		eap-corp {
-		    ok = return
-		    updated = return
-		}
+			eap-corp {
+				ok = return
+				updated = return
+			}
 	    }
 	}
   }
@@ -101,6 +106,7 @@ server eduLocal {
 	}
 
 	## VLAN stuff: set standard replies here:
+	## this lot Aruba specific? F-P, T-M-T and T-T wrong...
 	update reply {
 	    Framed-Protocol := PPP
 	    Service-Type := Framed
@@ -108,32 +114,21 @@ server eduLocal {
 	    Tunnel-Medium-Type := IP
 	}
 
-	debug_all
-
 	## VLAN stuff: set specific VLAN ID:
-	## We only have a &Stripped-User-Domain if its username@relam.ac.uk format, so user auth:
+	## On a good day, inners will have set correct user-name, stripped-username, domain, groups to outer...
+	## We only have a &Stripped-User-Domain if its username@realm.ac.uk format, so user auth:
 	if (&Stripped-User-Domain) {
 	    if (&Stripped-User-Domain =~ /${my_realms_regex}/) {
-		## auth via client certificate (machine or user)
-		## as the only way to do cert auth is on a corporate device at the moment, pop them in corp vlan
-		if (&request:EAP-Type == "TLS") {
+			## further differentiation for staff/stu/machine here (based on attrs from inner)
 		    update reply {
-			Tunnel-Private-Group-ID := "%{config:vlans.default.corp}"
-		    }
-		}
-		## PEAP/password auth (user), BYOD
-		else {
-		    ## differentatie staff vs students?
-		    update reply {
-		    	Tunnel-Private-Group-ID := "%{config:vlans.default.staff}"
-		    }
+		    	Tunnel-Private-Group-ID := "%{config:vlans.default.student}"
 	        }
 	    }
 	    else {
 		## visitor
-		update reply {
-		    Tunnel-Private-Group-ID := "%{config:vlans.default.visitor}"
-		}
+			update reply {
+				Tunnel-Private-Group-ID := "%{config:vlans.default.visitor}"
+			}
 	    }
 	}
 	## one of our computers...
@@ -142,8 +137,6 @@ server eduLocal {
 	        Tunnel-Private-Group-ID := "%{config:vlans.default.corp}"
 	    }
     }
-
-  debug_all
   }
 
   pre-proxy {

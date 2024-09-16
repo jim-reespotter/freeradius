@@ -3,6 +3,7 @@
 ##
 
 ATTRIBUTE	eduroam-required-groups	3000    string
+ATTRIBUTE	ms-ad-ntdomain			3001	string
 
 #
 #	These attributes are examples

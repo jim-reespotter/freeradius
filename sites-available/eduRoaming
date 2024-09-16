@@ -1,5 +1,6 @@
 ##
 ## processor to handle offsite eduroam auth requests
+## (we're assuming the eduroamers have filtered correctly here)
 ## 
 
 server eduRoaming {
@@ -11,8 +12,10 @@ server eduRoaming {
 	operator-name
 	suffix
 	split_username_nai
+	
+	## Differentiation - do it in inners...
 
-        eap-eduroam {
+    eap-eduroam {
 	    ok = return
 		updated = return
 	}

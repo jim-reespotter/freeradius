@@ -8,12 +8,23 @@ mschap {
 	require_encryption = yes
 #	require_strong = yes
 
-
+	## main PEAP authenticator.
+	## FreeRad needs access to winbind priv port, so add freerad to winbindd_priv in /etc/groups
+	## 
 	ntlm_auth = "/usr/bin/ntlm_auth --request-nt-key --allow-mschapv2 \
 			--username=%{%{Stripped-User-Name}:-%{%{User-Name}:-None}} \
-			--require-membership-of=%{eduroam-required-groups} \
 			--challenge=%{%{mschap:Challenge}:-00} \
 			--nt-response=%{%{mschap:NT-Response}:-00}"
+
+## cut out n keep lines to add to above to do group + user differentiation:
+## : group differentiation: 
+## - see:
+##		--require-membership-of=%{eduroam-required-groups} \
+##
+## : domain assignement:
+## - see: orgSpecific.conf, 
+## : 	--domain=%{ms-ad-ntdomain} \
+
 
 	pool {
 

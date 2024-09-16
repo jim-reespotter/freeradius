@@ -12,11 +12,15 @@ eap eap-eduroam {
 
 	tls-config tls-common {
 
+		## This is the server cert. Include intermediate CA in serverCert.pem if you need to
 		private_key_password = ${certPassPhrase}
 		private_key_file = ${certdir}/serverCert.key
 		certificate_file = ${certdir}/serverCert.pem
 
+		## This one is for EAP-TLS only - a collection of CAs that we'll trust
 		ca_file = ${certdir}/eduroam_trusted_cas.pem
+		
+		## ??
 		ca_path = ${cadir}
 		cipher_list = "DEFAULT"
 		cipher_server_preference = no
@@ -26,11 +30,12 @@ eap eap-eduroam {
 
 		ecdh_curve = ""
 
+		## Don't enable this unless you have a means of removing old session records
 		cache {
 			enable = no
 			lifetime = 24 
-			name = "eduroam"
-			persist_dir = "/var/cache/freeradius/eduroam"
+##			name = "eduroam"
+##			persist_dir = "/var/cache/freeradius/eduroam"
 #			store {
 #				Tunnel-Private-Group-Id
 #			}

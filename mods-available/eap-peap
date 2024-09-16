@@ -1,10 +1,12 @@
 ##
 ## EAP-PEAP settings:
 ##
+## Not much going on here.
+##
 
 eap eap-peap {
 
-        default_eap_type = mschapv2
+    default_eap_type = mschapv2
 	timer_expire = 60
 	max_sessions = ${max_requests}
 

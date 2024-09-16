@@ -1,6 +1,7 @@
 ##
-## Processor for corporate device auth cert checks
-###
+## Processor for euroam TLS auth
+## - should be more or less in line with eduroam-peap (possible name change?)
+##
 
 server check-eap-tls-eduroam {
 
@@ -8,13 +9,16 @@ server check-eap-tls-eduroam {
 
     authorize {
 
-	if ( "%{TLS-Client-Cert-Subject-Alt-Name-Upn}" == "%{User-Name}" ) { 
-	## not sure we need above check?
-	## but we should check:
-        ## - disabled/expired account?
-	## - group membership?
+		## should copy alt-name-UPN -> User-Name...
+		##	if ( "%{TLS-Client-Cert-Subject-Alt-Name-Upn}" == "%{User-Name}" ) { 
+
+		## now do group checks? (with InTune/ADCS this will be mosting staff but...)
+		## not sure we need above check?
+		## but we should check:
+			## - disabled/expired account?
+			## - expired/revoked certs (OCSP)?
 	    update config {
-		&Auth-Type := Accept
+			&Auth-Type := Accept
 	    }
 	}
 	else {
@@ -22,18 +26,4 @@ server check-eap-tls-eduroam {
 		&Auth-Type := Reject
 	    }
 	}
-#	if ("%{TLS-Client-Cert-Common-Name}" == 'client.example.com') {
-#		update config {
-#			&Auth-Type := Accept
-#		}
-#	}
-#	else {
-#		update config {
-#			&Auth-Type := Reject
-#		}
-#		update reply {
-#			&Reply-Message := "Your certificate is not valid."
-#		}
-#	}
-    }
 }

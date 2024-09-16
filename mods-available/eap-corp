@@ -12,15 +12,17 @@ eap eap-corp {
 
 	tls-config tls-common {
 
-
-
-
+		## Server cert (include intermediate CAs in here if you have them)
 		private_key_password = ${certPassPhrase} 
 		private_key_file = ${certdir}/serverCert.key 
 		certificate_file = ${certdir}/serverCert.pem
 		
+		## list of CAs you want to use for auth (not server cert related)
 		ca_file = ${certdir}/corp_trusted_cas.pem
+		
+		## ??
 		ca_path = ${cadir}
+		
 		cipher_list = "DEFAULT"
 		cipher_server_preference = no
 
