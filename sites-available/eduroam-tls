@@ -1,0 +1,22 @@
+##
+## Processor for euroam TLS auth
+## - should be more or less in line with eduroam-peap (possible name change?)
+##
+
+server eduroam-tls {
+
+    authorize {
+
+	## should copy alt-name-UPN -> User-Name...
+	##	if ( "%{TLS-Client-Cert-Subject-Alt-Name-Upn}" == "%{User-Name}" ) { 
+
+	## now do group checks? (with InTune/ADCS this will be mosting staff but...)
+	## not sure we need above check?
+	## but we should check:
+	## - disabled/expired account?
+	## - expired/revoked certs (OCSP)?
+	update config {
+	    &Auth-Type := Accept
+	}
+    }
+}

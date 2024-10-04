@@ -3,16 +3,16 @@
 ## - might need a bit of work (and a name change)
 ##
 
-server check-eap-tls-corp {
+server check-eap-tls {
 
     authorize {
 	
-		## san dns -> User-Name....
-		## group checks?
+	## san dns -> User-Name....
+	## group checks?
 	
-		update config {
-			&Auth-Type := Accept
-		}
+	update config {
+	    &Auth-Type := Accept
+	}
 #	if ("%{TLS-Client-Cert-Common-Name}" == 'client.example.com') {
 #		update config {
 #			&Auth-Type := Accept

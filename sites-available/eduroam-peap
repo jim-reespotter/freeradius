@@ -1,0 +1,71 @@
+##
+## PEAP processing for eduroam
+##
+
+server eduroam-peap {
+
+    authorize {
+	split_username_nai
+
+	## push inner username to outer for accounting
+	update {
+	    ## possibly user-name and user-domain too? and groups?
+	    &outer.session-state:Stripped-User-Name := &Stripped-User-Name
+	}
+
+	## Looking up LDAP groups + caching:
+	## check the cache, see if an entry exists...
+	update control {
+	    Cache-Status-Only = 'yes'
+	}
+	cache
+
+	if (notfound) {
+	    update control {
+		Cache-Status-Only = 'no'
+	    }
+	    ldap
+	}
+	cache
+	
+	## end of LDAP group lookup (put this in a seprate chunk of code?)
+
+	## Group based filtering:
+	## - eduroam - no access - reject
+	## - domain users - allowed eduroam onsite
+	## - eduroam - roamer - allow offsite
+
+	## reject if member of no access:
+	if (&control:LDAP-Cached-Membership && &control:LDAP-Cached-Membership == "${groups.blocked}") {
+	    reject
+	}
+
+	## set which groups re required for login, dependent on request source:
+	if ("%{client:shortname}" =~ /^roaming/ ) {
+	    update request {
+		## DL-Eduroam-Roaming Access:
+		eduroam-required-groups := "${groups.roaming}"
+	    }
+	}
+	else {
+	    update request {
+		## anyone, so ?domain users?
+		eduroam-required-groups := "${groups.local}"
+	    }
+	}
+	
+	ms-ad-ntdomain := "%{config:realms.%{Stripped-User-Domain}}"
+
+	eap-peap {
+	    ok = return
+	}
+
+	mschap
+	return
+    }
+
+    authenticate {
+	eap-peap
+	mschap
+    }
+}

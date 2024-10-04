@@ -5,28 +5,28 @@
 
 server eduRoaming {
 
-  authorize {
+    authorize {
 
 	filter_username
 	preprocess
 	operator-name
-	suffix
+#	suffix
 	split_username_nai
 	
 	## Differentiation - do it in inners...
 
-    eap-eduroam {
+	eap-eduroam {
 	    ok = return
-		updated = return
+	    updated = return
 	}
-  }
+    }
 
-  authenticate {
+    authenticate {
 
 	eap-eduroam
-  }
+    }
 
-  preacct {
+    preacct {
 
 	preprocess
 #	acct_unique
@@ -37,28 +37,29 @@ server eduRoaming {
 
 #	detail
 	attr_filter.accounting_response
-  }
+    }
+ 
+    session {
+    }
 
-  session {
-  }
-
-  post-auth {
+    post-auth {
 
 	if (session-state:User-Name && reply:User-Name && request:User-Name && (reply:User-Name == request:User-Name)) {
-		update reply {
-			&User-Name !* ANY
-		}
+	    update reply {
+		&User-Name !* ANY
+	    }
 	}
+
 	update {
-		&reply: += &session-state:
+	    &reply: += &session-state:
 	}
 
 	remove_reply_message_if_eap
 
 	Post-Auth-Type REJECT {
-		attr_filter.access_reject
-		eap-eduroam
-		remove_reply_message_if_eap
+	    attr_filter.access_reject
+	    eap-eduroam
+	    remove_reply_message_if_eap
 	}
 
 	Post-Auth-Type Challenge {
@@ -68,16 +69,16 @@ server eduRoaming {
 	}
 
 	if (EAP-Key-Name && &reply:EAP-Session-Id) {
-		update reply {
-			&EAP-Key-Name := &reply:EAP-Session-Id
-		}
+	    update reply {
+		&EAP-Key-Name := &reply:EAP-Session-Id
+	    }
 	}
-  }
+    }
 
-  pre-proxy {
-  }
+    pre-proxy {
+    }
 
-  post-proxy {
-    eap-eduroam
-  }
+    post-proxy {
+	eap-eduroam
+    }
 }
