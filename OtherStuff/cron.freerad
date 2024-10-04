@@ -1,0 +1,11 @@
+##
+## Cron job to floss old TLS session records
+##
+## make sure directory matches cache file name in eap modules
+##
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+## At 6pm every day
+* 18  * * * freerad find /var/cache/freeradius -mtime +2 -exec rm -f {} \;
+
