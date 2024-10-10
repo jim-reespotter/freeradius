@@ -43,7 +43,7 @@ server eduroam-peap {
 	## set which groups re required for login, dependent on request source:
 	if ("%{client:shortname}" =~ /^roaming/ ) {
 	    update request {
-		## DL-Eduroam-Roaming Access:
+		## roaming access group:
 		eduroam-required-groups := "${groups.roaming}"
 	    }
 	}
@@ -54,7 +54,8 @@ server eduroam-peap {
 	    }
 	}
 	
-	ms-ad-ntdomain := "%{config:realms.%{Stripped-User-Domain}}"
+	## do realm -> domain mapping:
+#	ms-ad-ntdomain := "%{config:realms.%{Stripped-User-Domain}}"
 
 	eap-peap {
 	    ok = return

@@ -41,7 +41,7 @@ openssl_conf = default_conf
  emailAddress = optional 
 
 [ server_cert ]
- basicConstraints=CA:FALSE	# Add SKI/AKI
+ basicConstraints=CA:FALSE	
  subjectKeyIdentifier=hash
  authorityKeyIdentifier=keyid,issuer 
  extendedKeyUsage=serverAuth 

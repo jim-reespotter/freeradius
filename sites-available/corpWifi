@@ -1,0 +1,82 @@
+##
+## Sample processor to handle corporate device auth
+##
+## To do this:
+## - add listeners on different IP or port
+## - add new RAD clients that connect to these ports
+## - add virtual_server = corpWifi to client
+##
+## Alt - use same port, add processing to eduLocal
+## 
+
+server corpWifi {
+
+    authorize {
+
+	filter_username
+	preprocess
+	suffix
+
+        eap-corp {
+	    ok = return
+#		updated = return
+	}
+
+#	Autz-Type New-TLS-Connection {
+#		  ok
+#	}
+    }
+
+    authenticate {
+
+	eap-corp
+    }
+
+    preacct {
+
+	preprocess
+#	acct_unique
+	suffix
+    }
+
+    accounting {
+
+	detail
+	attr_filter.accounting_response
+    }
+
+    session {
+    }
+
+    post-auth {
+
+	if (session-state:User-Name && reply:User-Name && request:User-Name && (reply:User-Name == request:User-Name)) {
+		update reply {
+			&User-Name !* ANY
+		}
+	}
+	update {
+		&reply: += &session-state:
+	}
+
+	remove_reply_message_if_eap
+
+	Post-Auth-Type REJECT {
+		attr_filter.access_reject
+		eap-corp
+		remove_reply_message_if_eap
+	}
+
+	Post-Auth-Type Challenge {
+	}
+
+	Post-Auth-Type Client-Lost {
+	}
+
+	if (EAP-Key-Name && &reply:EAP-Session-Id) {
+		update reply {
+			&EAP-Key-Name := &reply:EAP-Session-Id
+		}
+	}
+    }
+}

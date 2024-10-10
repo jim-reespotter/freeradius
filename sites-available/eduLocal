@@ -7,10 +7,9 @@ server eduLocal {
 
   authorize {
 
+	## do we need these?
 	filter_username
 	preprocess
-
-	debug_all
 
 	if (&User-Name) {
 	    # standard eduroam user auth: Username contains a @, SSID == eduroam
@@ -44,6 +43,7 @@ server eduLocal {
 		    updated = return
 		}
 	    }
+	    ## Add other SSID processing here (same APs)
 	}
   }
 
@@ -63,6 +63,12 @@ server eduLocal {
 
 #	detail
 	attr_filter.accounting_response
+
+	update control {
+	    Replicate-To-Realm := "fw_acct"
+	}
+	replicate
+
   }
 
   session {
@@ -134,6 +140,7 @@ server eduLocal {
     }
 
     pre-proxy {
+	attr_filter.pre-proxy
     }
 
     post-proxy {

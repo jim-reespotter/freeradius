@@ -6,7 +6,6 @@ mschap {
 
 	use_mppe = yes
 	require_encryption = yes
-#	require_strong = yes
 
 	## main PEAP authenticator.
 	## FreeRad needs access to winbind priv port, so add freerad to winbindd_priv in /etc/groups
@@ -15,6 +14,9 @@ mschap {
 			--username=%{%{Stripped-User-Name}:-%{%{User-Name}:-None}} \
 			--challenge=%{%{mschap:Challenge}:-00} \
 			--nt-response=%{%{mschap:NT-Response}:-00}"
+## Add realm -> domain mapping (does group nme work?): --require-membership-of=%{eduroam-required-groups}
+## Add a group requirement:  --domain=%{ms-ad-domain}
+
 
 ## cut out n keep lines to add to above to do group + user differentiation:
 ## : group differentiation: 

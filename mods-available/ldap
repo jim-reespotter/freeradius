@@ -1,5 +1,5 @@
 ##
-##  LDAP config (group lookups) - specifically for eduroam no access group:
+##  LDAP config (group lookups) - specifically for eduroam access control groups:
 ##
 ldap {
 
@@ -8,6 +8,8 @@ ldap {
 
 	tls {
 		start_tls = yes
+		## This is the root CA, not the server cert (which will keep expiring)
+		## you can have multiple certs in here
 		ca_file	= ${certdir}/ldaps.pem
 	}
 
@@ -22,7 +24,10 @@ ldap {
 
         group { 
 		base_dn = "${..base_dn}" 
-		filter = "(&(objectclass=group)(sAMAccountName=DL-Eduroam-No Access))" 
+		## optionally filter to only groups we're interested in?
+		## Does (sAMAccountName=eduroam-*) work?
+		filter = "(objectclass=group))" 
+		## oid gives nested (if you need that)
 		membership_filter = "(member:1.2.840.113556.1.4.1941:=%{control:Ldap-UserDn})" 
 		cacheable_name ='yes' 
 		cacheable_dn = 'no' 
